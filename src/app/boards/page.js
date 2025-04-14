@@ -7,11 +7,13 @@ import Cookies from "js-cookie";
 function BoardItem({ no, title, writer, createDate, viewCount }) {
   return (
     <tr>
-        <td>{no}</td>
-        <td><a href={`/boards/${no}`}>{title}</a></td>
-        <td>{writer.name}</td>
-        <td>{createDate}</td>
-        <td>{viewCount}</td>
+      <td>{no}</td>
+      <td>
+        <a href={`/boards/${no}`}>{title}</a>
+      </td>
+      <td>{writer.name}</td>
+      <td>{createDate}</td>
+      <td>{viewCount}</td>
     </tr>
   );
 }
@@ -21,7 +23,7 @@ export default function Boards() {
 
   useEffect(() => {
     const jwtToken = Cookies.get("jwt_token");
-    
+
     if (!jwtToken) {
       alert("로그인 후 이용해주세요.");
       return;
@@ -34,7 +36,7 @@ export default function Boards() {
             Authorization: "Bearer " + jwtToken,
           },
         });
-        if (!response.ok) { 
+        if (!response.ok) {
           throw new Error("목록 요청 실패!");
         }
         const result = await response.json();
@@ -51,7 +53,7 @@ export default function Boards() {
   return (
     <>
       <h1 className={styles.heading}>게시글 목록</h1>
-      <a href="form.html">새 게시글</a>
+      <a href='/boards/new'>새 게시글</a>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -63,7 +65,9 @@ export default function Boards() {
           </tr>
         </thead>
         <tbody>
-          {list.map((item, index) => <BoardItem key={item.no} {...item} />)}
+          {list.map((item, index) => (
+            <BoardItem key={item.no} {...item} />
+          ))}
         </tbody>
       </table>
     </>

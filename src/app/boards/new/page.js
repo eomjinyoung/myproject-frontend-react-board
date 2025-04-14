@@ -1,40 +1,40 @@
 "use client";
 
 import { useRef, useState } from "react";
-import "../globals.css";
-import { useAuth } from "common/components/AuthProvider";
+import styles from "./page.module.css";
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
 export default function Auth() {
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState("");
-  const { setToken } = useAuth();
-  const txtEmail = useRef();
-  const txtPassword = useRef();
-  const chkSaveEmail = useRef();
+  const formRef = useRef(null); // 폼 전체를 참조
 
-  async function submit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:8010/auth/login", {
-        method: "POST",
-        body: new URLSearchParams({
-          email: txtEmail.current.value,
-          password: txtPassword.current.value,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("로그인 요청 실패!");
-      }
-      const result = await response.json();
+    const jwtToken = Cookies.get("jwt_token");
 
-      if (result.status == "success") {
-        setToken(result.data); // JWT 토큰을 AuthProvider에 저장
-        router.push("http://localhost:3010/"); // 로그인 성공 시 메인 페이지로 이동
-        
-      } else {
-        setErrorMessage("사용자 인증 실패!");
+    if (!jwtToken) {
+      alert("로그인 후 이용해주세요.");
+      return;
+    }
+
+    try {
+      e.preventDefault();
+
+      const response = await fetch(`http://localhost:8020/board/add`, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + jwtToken,
+        },
+        body: new FormData(formRef.current),
+      });
+      const result = await response.json();
+      if (result.status == "failure") {
+        alert("게시글 등록 실패!");
+        throw new Error("게시글 등록 실패!");
       }
+
+      router.push("/boards");
     } catch (error) {
       console.log(error);
     }
@@ -42,27 +42,22 @@ export default function Auth() {
 
   return (
     <>
-      <h2>로그인</h2>
-      {errorMessage && (
-      <p className='error'>
-        사용자 인증 실패!
-      </p>
-      )}
-      <form onSubmit={submit}>
-        <div>
-          <label htmlFor='email'>이메일:</label>
-          <input ref={txtEmail} type='email' required />
+      <h1 className={styles.heading}>새 게시글</h1>
+      <form ref={formRef} onSubmit={handleSubmit} method='POST' encType='multipart/form-data'>
+        <div className={styles["form-group"]}>
+          <label htmlFor='title'>제목:</label>
+          <input type='text' id='title' name='title' required />
         </div>
-        <div>
-          <label htmlFor='password'>암호:</label>
-          <input ref={txtPassword} type='password' required />
+        <div className={styles["form-group"]}>
+          <label htmlFor='content'>내용:</label>
+          <textarea id='content' name='content' required></textarea>
         </div>
-        <div>
-          <input ref={chkSaveEmail} type='checkbox' />
-          <label htmlFor='saveEmail'>이메일 저장</label>
+        <div className={styles["form-group"]}>
+          <label htmlFor='files'>첨부파일:</label>
+          <input type='file' id='files' name='files' multiple />
         </div>
-        <div>
-          <button>로그인</button>
+        <div className={styles["form-group"]}>
+          <input type='submit' value='등록' />
         </div>
       </form>
     </>

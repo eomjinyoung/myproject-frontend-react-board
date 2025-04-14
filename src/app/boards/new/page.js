@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import styles from "./page.module.css";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";

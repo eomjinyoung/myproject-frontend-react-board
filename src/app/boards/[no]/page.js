@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import Cookies from "js-cookie";
@@ -32,10 +32,11 @@ export default function Board() {
     viewCount: 0,
     attachedFiles: [],
   });
+  const [reloadKey, setReloadKey] = useState(0);
   const router = useRouter();
-
   const params = useParams();
   const no = params.no;
+  const formRef = useRef(null);
 
   const handleDeleteBoard = useCallback(async (e) => {
     e.preventDefault();
@@ -46,23 +47,25 @@ export default function Board() {
       return;
     }
 
-    fetch(`http://localhost:8020/board/delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + jwtToken,
-      },
-      body: new URLSearchParams({ no: no }),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((result) => {
-        if (result.status == "failure") {
-          alert("게시글 삭제 실패!");
-          return;
-        }
-        router.push("./");
+    try {
+      const response = await fetch(`http://localhost:8020/board/delete`, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + jwtToken,
+        },
+        body: new URLSearchParams({ no: no }),
       });
+
+      const result = await response.json();
+      if (result.status == "failure") {
+        throw new Error(result.data);
+      }
+
+      router.push("./");
+    } catch (error) {
+      alert("게시글 삭제 실패!");
+      console.log(error);
+    }
   }, []);
 
   const handleDeleteFile = useCallback(async (e) => {
@@ -74,29 +77,62 @@ export default function Board() {
       return;
     }
 
-    const fileNo = parseInt(e.currentTarget.dataset.no);
+    try {
+      const fileNo = parseInt(e.currentTarget.dataset.no);
 
-    fetch(`http://localhost:8020/board/file/delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + jwtToken,
-      },
-      body: new URLSearchParams({ fileNo: fileNo }),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((result) => {
-        if (result.status == "failure") {
-          alert("파일 삭제 실패!");
-          return;
-        }
-        console.log("setBoard() 호출됨!");
-        setBoard((prevBoard) => ({
-          ...prevBoard,
-          attachedFiles: prevBoard.attachedFiles.filter((file) => file.no !== fileNo),
-        }));
+      const response = await fetch(`http://localhost:8020/board/file/delete`, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + jwtToken,
+        },
+        body: new URLSearchParams({ fileNo: fileNo }),
       });
+
+      const result = await response.json();
+
+      if (result.status == "failure") {
+        throw new Error(result.data);
+      }
+
+      setBoard((prevBoard) => ({
+        ...prevBoard,
+        attachedFiles: prevBoard.attachedFiles.filter((file) => file.no !== fileNo),
+      }));
+    } catch (error) {
+      alert("파일 삭제 실패!");
+      console.log(error);
+    }
+  }, []);
+
+  const handleUpdateSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    const jwtToken = Cookies.get("jwt_token");
+
+    if (!jwtToken) {
+      alert("로그인 후 이용해주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8020/board/update`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer " + jwtToken,
+        },
+        body: new FormData(formRef.current),
+      });
+
+      const result = await response.json();
+
+      if (result.status == "failure") {
+        throw new Error(result.data);
+      }
+
+      setReloadKey(reloadKey + 1);
+    } catch (error) {
+      alert("파일 변경 실패!");
+      console.log(error);
+    }
   }, []);
 
   useEffect(() => {
@@ -126,12 +162,12 @@ export default function Board() {
       }
     };
     fetchBoardDetail();
-  }, []);
+  }, [reloadKey]);
 
   return (
     <>
       <h1 className={styles.heading}>게시글</h1>
-      <form method='post' encType='multipart/form-data'>
+      <form ref={formRef} method='post' encType='multipart/form-data' onSubmit={handleUpdateSubmit}>
         <div className={styles["form-group"]}>
           <label htmlFor='no'>번호:</label>
           <input type='text' id='no' name='no' value={board.no} readOnly />

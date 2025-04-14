@@ -1,30 +1,107 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import Cookies from "js-cookie";
 
-export default function Boards() {
+function FileItem({ no, originFilename, onDelete }) {
+  return (
+    <li>
+      <a
+        href={`http://localhost:8020/board/file/download?fileNo=${no}`}
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        {originFilename}
+      </a>
+      <button type='button' data-no={no} onClick={onDelete}>
+        삭제
+      </button>
+    </li>
+  );
+}
+
+export default function Board() {
   const [board, setBoard] = useState({
     no: "",
     title: "",
     content: "",
     writer: { name: "" },
     createDate: "",
-    viewCount: 0
+    viewCount: 0,
+    attachedFiles: [],
   });
+  const router = useRouter();
+
   const params = useParams();
   const no = params.no;
-  
+
   const handleDeleteBoard = useCallback(async (e) => {
     e.preventDefault();
-    console.log("삭제 요청");
+    const jwtToken = Cookies.get("jwt_token");
+
+    if (!jwtToken) {
+      alert("로그인 후 이용해주세요.");
+      return;
+    }
+
+    fetch(`http://localhost:8020/board/delete`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + jwtToken,
+      },
+      body: new URLSearchParams({ no: no }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((result) => {
+        if (result.status == "failure") {
+          alert("게시글 삭제 실패!");
+          return;
+        }
+        router.push("./");
+      });
+  }, []);
+
+  const handleDeleteFile = useCallback(async (e) => {
+    e.preventDefault();
+    const jwtToken = Cookies.get("jwt_token");
+
+    if (!jwtToken) {
+      alert("로그인 후 이용해주세요.");
+      return;
+    }
+
+    const fileNo = parseInt(e.currentTarget.dataset.no);
+
+    fetch(`http://localhost:8020/board/file/delete`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + jwtToken,
+      },
+      body: new URLSearchParams({ fileNo: fileNo }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((result) => {
+        if (result.status == "failure") {
+          alert("파일 삭제 실패!");
+          return;
+        }
+        console.log("setBoard() 호출됨!");
+        setBoard((prevBoard) => ({
+          ...prevBoard,
+          attachedFiles: prevBoard.attachedFiles.filter((file) => file.no !== fileNo),
+        }));
+      });
   }, []);
 
   useEffect(() => {
     const jwtToken = Cookies.get("jwt_token");
-    
+
     if (!jwtToken) {
       alert("로그인 후 이용해주세요.");
       return;
@@ -37,7 +114,7 @@ export default function Boards() {
             Authorization: "Bearer " + jwtToken,
           },
         });
-        if (!response.ok) { 
+        if (!response.ok) {
           throw new Error("조회 요청 실패!");
         }
         const result = await response.json();
@@ -54,51 +131,59 @@ export default function Boards() {
   return (
     <>
       <h1 className={styles.heading}>게시글</h1>
-      <form method="post" encType="multipart/form-data">
+      <form method='post' encType='multipart/form-data'>
         <div className={styles["form-group"]}>
-          <label htmlFor="no">번호:</label>
-          <input type="text" id="no" name="no" value={board.no} readOnly />
+          <label htmlFor='no'>번호:</label>
+          <input type='text' id='no' name='no' value={board.no} readOnly />
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="title">제목:</label>
-          <input type="text" id="title" name="title" value={board.title} 
-            onChange={(e) =>
-              setBoard((prev) => ({ ...prev, title: e.target.value }))
-            } 
-            required />
+          <label htmlFor='title'>제목:</label>
+          <input
+            type='text'
+            id='title'
+            name='title'
+            value={board.title}
+            onChange={(e) => setBoard((prev) => ({ ...prev, title: e.target.value }))}
+            required
+          />
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="content">내용:</label>
-          <textarea 
-            id="content" name="content" value={board.content} 
-            onChange={(e) =>
-              setBoard((prev) => ({ ...prev, content: e.target.value }))
-            }
-            required></textarea>
+          <label htmlFor='content'>내용:</label>
+          <textarea
+            id='content'
+            name='content'
+            value={board.content}
+            onChange={(e) => setBoard((prev) => ({ ...prev, content: e.target.value }))}
+            required
+          ></textarea>
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="files">첨부파일:</label>
-          <input type="file" id="files" name="files" multiple />
-          <ul id="attached-files"></ul>
+          <label htmlFor='files'>첨부파일:</label>
+          <input type='file' id='files' name='files' multiple />
+          <ul>
+            {board.attachedFiles.map((file, index) => (
+              <FileItem key={file.no} {...file} onDelete={handleDeleteFile} />
+            ))}
+          </ul>
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="writer">작성자:</label>
-          <input type="text" id="writer" value={board.writer.name}  readOnly />
+          <label htmlFor='writer'>작성자:</label>
+          <input type='text' id='writer' value={board.writer.name} readOnly />
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="createDate">작성일:</label>
-          <input type="text" id="createDate" value={board.createDate} readOnly />
+          <label htmlFor='createDate'>작성일:</label>
+          <input type='text' id='createDate' value={board.createDate} readOnly />
         </div>
         <div className={styles["form-group"]}>
-          <label htmlFor="viewCount">조회수:</label>
-          <input type="text" id="viewCount" value={board.viewCount} readOnly />
+          <label htmlFor='viewCount'>조회수:</label>
+          <input type='text' id='viewCount' value={board.viewCount} readOnly />
         </div>
         <div className={styles["form-group"]}>
-          <input type="submit" value="변경" />
-          <input type="button" value="삭제" onClick={handleDeleteBoard} />
+          <input type='submit' value='변경' />
+          <input type='button' value='삭제' onClick={handleDeleteBoard} />
         </div>
       </form>
-      <a href="list.html">목록</a>
+      <a href='./'>목록</a>
     </>
   );
 }

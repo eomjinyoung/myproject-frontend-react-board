@@ -31,7 +31,7 @@ export default function Boards() {
 
     const fetchBoardList = async (jwtToken) => {
       try {
-        const response = await fetch(`http://localhost:8020/board/list`, {
+        const response = await fetch(`http://110.165.18.171:8020/board/list`, {
           headers: {
             Authorization: "Bearer " + jwtToken,
           },

@@ -21,7 +21,7 @@ export default function Auth() {
     try {
       e.preventDefault();
 
-      const response = await fetch(`http://localhost:8020/board/add`, {
+      const response = await fetch(`http://110.165.18.171:8020/board/add`, {
         method: "POST",
         headers: {
           Authorization: "Bearer " + jwtToken,

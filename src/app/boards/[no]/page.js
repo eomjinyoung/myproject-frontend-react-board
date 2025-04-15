@@ -9,7 +9,7 @@ function FileItem({ no, originFilename, onDelete }) {
   return (
     <li>
       <a
-        href={`http://localhost:8020/board/file/download?fileNo=${no}`}
+        href={`http://110.165.18.171:8020/board/file/download?fileNo=${no}`}
         target='_blank'
         rel='noopener noreferrer'
       >
@@ -48,7 +48,7 @@ export default function Board() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8020/board/delete`, {
+      const response = await fetch(`http://110.165.18.171:8020/board/delete`, {
         method: "DELETE",
         headers: {
           Authorization: "Bearer " + jwtToken,
@@ -80,7 +80,7 @@ export default function Board() {
     try {
       const fileNo = parseInt(e.currentTarget.dataset.no);
 
-      const response = await fetch(`http://localhost:8020/board/file/delete`, {
+      const response = await fetch(`http://110.165.18.171:8020/board/file/delete`, {
         method: "DELETE",
         headers: {
           Authorization: "Bearer " + jwtToken,
@@ -114,7 +114,7 @@ export default function Board() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8020/board/update`, {
+      const response = await fetch(`http://110.165.18.171:8020/board/update`, {
         method: "PATCH",
         headers: {
           Authorization: "Bearer " + jwtToken,
@@ -145,7 +145,7 @@ export default function Board() {
 
     const fetchBoardDetail = async () => {
       try {
-        const response = await fetch(`http://localhost:8020/board/detail?no=${no}`, {
+        const response = await fetch(`http://110.165.18.171:8020/board/detail?no=${no}`, {
           headers: {
             Authorization: "Bearer " + jwtToken,
           },

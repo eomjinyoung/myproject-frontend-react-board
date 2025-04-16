@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import Cookies from "js-cookie";
 
@@ -9,7 +10,7 @@ function BoardItem({ no, title, writer, createDate, viewCount }) {
     <tr>
       <td>{no}</td>
       <td>
-        <a href={`/boards/${no}`}>{title}</a>
+        <Link href={`/boards/${no}`}>{title}</Link>
       </td>
       <td>{writer.name}</td>
       <td>{createDate}</td>
@@ -31,7 +32,7 @@ export default function Boards() {
 
     const fetchBoardList = async (jwtToken) => {
       try {
-        const response = await fetch(`http://110.165.18.171:8020/board/list`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/list`, {
           headers: {
             Authorization: "Bearer " + jwtToken,
           },
@@ -53,7 +54,7 @@ export default function Boards() {
   return (
     <>
       <h1 className={styles.heading}>게시글 목록</h1>
-      <a href='/boards/new'>새 게시글</a>
+      <Link href={"/boards/new"}>새 게시글</Link>
       <table className={styles.table}>
         <thead>
           <tr>

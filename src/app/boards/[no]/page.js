@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
@@ -9,7 +10,7 @@ function FileItem({ no, originFilename, onDelete }) {
   return (
     <li>
       <a
-        href={`http://110.165.18.171:8020/board/file/download?fileNo=${no}`}
+        href={`${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/file/download?fileNo=${no}`}
         target='_blank'
         rel='noopener noreferrer'
       >
@@ -48,7 +49,7 @@ export default function Board() {
     }
 
     try {
-      const response = await fetch(`http://110.165.18.171:8020/board/delete`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/delete`, {
         method: "DELETE",
         headers: {
           Authorization: "Bearer " + jwtToken,
@@ -63,7 +64,7 @@ export default function Board() {
 
       router.push("./");
     } catch (error) {
-      alert("게시글 삭제 실패!");
+      alert("게시글 삭제 실패!: " + error.message);
       console.log(error);
     }
   }, []);
@@ -80,13 +81,16 @@ export default function Board() {
     try {
       const fileNo = parseInt(e.currentTarget.dataset.no);
 
-      const response = await fetch(`http://110.165.18.171:8020/board/file/delete`, {
-        method: "DELETE",
-        headers: {
-          Authorization: "Bearer " + jwtToken,
-        },
-        body: new URLSearchParams({ fileNo: fileNo }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/file/delete`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer " + jwtToken,
+          },
+          body: new URLSearchParams({ fileNo: fileNo }),
+        }
+      );
 
       const result = await response.json();
 
@@ -114,7 +118,7 @@ export default function Board() {
     }
 
     try {
-      const response = await fetch(`http://110.165.18.171:8020/board/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/update`, {
         method: "PATCH",
         headers: {
           Authorization: "Bearer " + jwtToken,
@@ -145,11 +149,14 @@ export default function Board() {
 
     const fetchBoardDetail = async () => {
       try {
-        const response = await fetch(`http://110.165.18.171:8020/board/detail?no=${no}`, {
-          headers: {
-            Authorization: "Bearer " + jwtToken,
-          },
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BOARD_REST_API_URL}/board/detail?no=${no}`,
+          {
+            headers: {
+              Authorization: "Bearer " + jwtToken,
+            },
+          }
+        );
         if (!response.ok) {
           throw new Error("조회 요청 실패!");
         }
@@ -219,7 +226,7 @@ export default function Board() {
           <input type='button' value='삭제' onClick={handleDeleteBoard} />
         </div>
       </form>
-      <a href='./'>목록</a>
+      <Link href={"./"}>목록</Link>
     </>
   );
 }

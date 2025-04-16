@@ -105,7 +105,7 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 3010
+EXPOSE 3020
 
 CMD ["npm", "run", "start"]
 ```
@@ -119,7 +119,7 @@ docker build -t myproject-frontend-board .
 ## 도커 컨테이너 실행
 
 ```bash
-docker run -d -p 3010:3010 --name board-ui myproject-frontend-board
+docker run -d -p 3020:3020 --name board-ui myproject-frontend-board
 ```
 
 ### 실행 상태 확인 - 로그 보기

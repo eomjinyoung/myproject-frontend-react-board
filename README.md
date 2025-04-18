@@ -164,7 +164,7 @@ $ sudo docker push k8s-edu-camp71.kr.ncr.ntruss.com/myproject-frontend-board
 
 ### 쿠버네티스가 관리할 리소스 정의: 매니페스트 파일(Kubernetes manifest file) 작성
 
-#### deployment + service 타입 리소스 정의 : `board_ui-deployment.yml`
+#### deployment + service 타입 리소스 정의 : `board-ui-deployment.yml`
 
 - kind: Deployment
   - 애플리케이션의 "실행 상태(pod)"를 정의하고 관리하는 리소스
@@ -181,40 +181,41 @@ $ sudo docker push k8s-edu-camp71.kr.ncr.ntruss.com/myproject-frontend-board
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: board_ui
+  name: board-ui
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: board_ui
+      app: board-ui
   template:
     metadata:
       labels:
-        app: board_ui
+        app: board-ui
     spec:
       restartPolicy: Always
       imagePullSecrets:
         - name: regcred
       containers:
-        - name: board_ui
+        - name: board-ui
           image: lo20hyy7.kr.private-ncr.ntruss.com/myproject-frontend-board
           ports:
-            - containerPort: 3020
+            - containerPort: 3000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: board_ui-service
+  name: board-ui-service
   labels:
-    app: board_ui
+    app: board-ui
 spec:
   selector:
-    app: board_ui
+    app: board-ui
   ports:
     - protocol: TCP
-      port: 3020
-      targetPort: 3020
-  type: LoadBalancer
+      port: 3000
+      targetPort: 3000
+      nodePort: 30140
+  type: NodePort
 ```
 
 도커 이미지를 지정할 때 Private Endpoint 를 사용하면, 내부 통신으로 다뤄진다.
@@ -224,7 +225,7 @@ spec:
 #### Deployment + Service 리소스 생성
 
 ```bash
-kubectl2 apply -f board_ui-deployment.yml
+kubectl2 apply -f board-ui-deployment.yml
 ```
 
 #### 생성된 리소스 확인

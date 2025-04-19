@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: board-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: board-ui
+  template:
+    metadata:
+      labels:
+        app: board-ui
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: board-ui
+          image: lo20hyy7.kr.private-ncr.ntruss.com/myproject-frontend-board
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: board-ui-service
+  labels:
+    app: board-ui
+spec:
+  selector:
+    app: board-ui
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30140
+  type: NodePort

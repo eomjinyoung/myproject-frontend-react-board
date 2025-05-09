@@ -25,14 +25,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: board-ui-service
-  labels:
-    app: board-ui
 spec:
   selector:
     app: board-ui
   ports:
     - protocol: TCP
-      port: 3000
+      port: 80
       targetPort: 3000
-      nodePort: 30140
-  type: NodePort
+  type: ClusterIP
